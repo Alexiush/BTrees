@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35005.142
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeapsAndBTrees", "HeapsAndBTrees.csproj", "{569B804B-80F7-455C-95E9-B10DE1325592}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{569B804B-80F7-455C-95E9-B10DE1325592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{569B804B-80F7-455C-95E9-B10DE1325592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{569B804B-80F7-455C-95E9-B10DE1325592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{569B804B-80F7-455C-95E9-B10DE1325592}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {221A466B-6186-48E5-87D7-484EC3B09315}
+	EndGlobalSection
+EndGlobal
