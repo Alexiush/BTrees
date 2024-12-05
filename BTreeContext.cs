@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HeapsAndBTrees
 {
-    internal interface IVirtualNode<T, TT, TKey> 
+    public interface IVirtualNode<T, TT, TKey> 
         where T : IActualNode<TT, TKey>
         where TT : INode<TKey>
         where TKey : IComparable
@@ -15,14 +15,14 @@ namespace HeapsAndBTrees
         public bool IsDirty { get; }
     }
 
-    internal interface IActualNode<T, TKey>
+    public interface IActualNode<T, TKey>
         where T : INode<TKey>
         where TKey : IComparable
     { 
     
     }
 
-    internal class BTreeContext<TKey, TValue, TNode, TVirtual, TActual> : IDisposable 
+    public class BTreeContext<TKey, TValue, TNode, TVirtual, TActual> : IDisposable 
         where TKey: IComparable
         where TNode : INode<TKey>
         where TActual : IActualNode<TNode, TKey>, TNode

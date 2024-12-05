@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HeapsAndBTrees
 {
-    interface IBTree<TKey, TValue, TNode, TVirtual, TActual>
+    public interface IBTree<TKey, TValue, TNode, TVirtual, TActual>
         where TKey : IComparable
         where TNode : INode<TKey>
         where TActual : IActualNode<TNode, TKey>, TNode
@@ -23,7 +23,7 @@ namespace HeapsAndBTrees
         public event OnRootChangedEvent OnRootChanged;
     }
 
-    internal interface IDiagnostableBTree<TKey, TValue, TNode, TVirtual, TActual> : IBTree<TKey, TValue, TNode, TVirtual, TActual>
+    public interface IDiagnostableBTree<TKey, TValue, TNode, TVirtual, TActual> : IBTree<TKey, TValue, TNode, TVirtual, TActual>
         where TKey : IComparable
         where TNode : INode<TKey>
         where TActual : IActualNode<TNode, TKey>, TNode
@@ -55,7 +55,7 @@ namespace HeapsAndBTrees
         }
     }
 
-    internal abstract class DiagnostableBTreeBase<TKey, TValue, TNode, TVirtual, TActual> : IDiagnostableBTree<TKey, TValue, TNode, TVirtual, TActual>
+    public abstract class DiagnostableBTreeBase<TKey, TValue, TNode, TVirtual, TActual> : IDiagnostableBTree<TKey, TValue, TNode, TVirtual, TActual>
         where TKey : IComparable
         where TNode : INode<TKey>
         where TActual : IActualNode<TNode, TKey>, TNode

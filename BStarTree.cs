@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using Optional;
 
 namespace HeapsAndBTrees
 {
-    internal class BStarTree<TKey, TValue> : 
+    public class BStarTree<TKey, TValue> : 
         DiagnostableBTreeBase<
             TKey, TValue, 
             BStarTree<TKey, TValue>.IBStarTreeNode, 
@@ -186,7 +187,7 @@ namespace HeapsAndBTrees
             }
         }
 
-        internal class VirtualNode : IBStarTreeNode, IVirtualNode<Node, IBStarTreeNode, TKey>
+        public class VirtualNode : IBStarTreeNode, IVirtualNode<Node, IBStarTreeNode, TKey>
         {
             public Node Node { get; protected set; }
             public IBStarTreeNode NodeTyped => Node;
@@ -719,8 +720,6 @@ namespace HeapsAndBTrees
 
         private void PredecessorBorrow(IBStarTreeNode pointer, IBStarTreeNode donor, int index) => Borrow(pointer, donor, index, false);
 
-        private void SuccessorBorrow(IBStarTreeNode pointer, IBStarTreeNode donor, int index) => Borrow(pointer, donor, index, true);
-
         private void Merge(IBStarTreeNode donor, IBStarTreeNode donee, IBStarTreeNode parent, int mutualKey, bool leftToRight)
         {
             int keysCount = donor.KeysCount;
@@ -880,24 +879,23 @@ namespace HeapsAndBTrees
                 if (!IsBig(childNode))
                 {
                     TryFill(childNode);
-                }
 
-                if (IsBig(childNode))
+                    if (IsBig(childNode))
+                    {
+                        Delete(key, pointer);
+                        return;
+                    }
+                }
+                else
                 {
                     PredecessorBorrow(pointer, childNode, index);
-                    return;
-                }
-
-                var childNodeSuccessor = pointer.GetChild(index + 1);
-                if (IsBig(childNodeSuccessor))
-                {
-                    SuccessorBorrow(pointer, childNodeSuccessor, index);
                     return;
                 }
 
                 if (IsRoot(pointer) && pointer.KeysCount == 1)
                 {
                     childNode.Expand(RootSize);
+                    var childNodeSuccessor = pointer.GetChild(index + 1);
                     Merge(childNodeSuccessor, childNode, pointer, index, true);
                     pointer.Shrink(_size);
                     Delete(key, childNode);

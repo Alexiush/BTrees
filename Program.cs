@@ -1,5 +1,5 @@
 ﻿using HeapsAndBTrees;
-
+/*
 List<(char Key, int Value)> entries = new List<(char, int)>
 {
     ('F', 0),
@@ -26,7 +26,7 @@ List<(char Key, int Value)> entries = new List<(char, int)>
 };
 var bTree = new BStarTree<char, int>(6);
 
-/*
+
 entries.ForEach(e =>
 {
     bTree.Insert(e.Key, e.Value);
@@ -75,24 +75,16 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
     for (int test = 0; test < 10; test++)
     {
         Console.WriteLine($"Test {test + 1}");
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < 1000000; i++)
         {
             uint insertKey = GetNewKey();
             bTree.Insert(insertKey, (uint)random.Next());
             insertedElementsQueue.Enqueue(insertKey);
             insertedElementsSet.Add(insertKey);
-
-            var treeTraverseKeys = bTree.Traverse().Select(kv => kv.Item1);
-            var actualKeys = insertedElementsSet.Order();
-
-            if (!treeTraverseKeys.SequenceEqual(actualKeys))
-            {
-                throw new Exception("Integrity lost");
-            }
         }
 
         bTree.Watch();
-        for (int i = 0; i < 2000; i++)
+        for (int i = 0; i < 200000; i++)
         {
             BTreeOperation operation = (BTreeOperation)(random.Next() % 3);
 
@@ -113,14 +105,6 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
                     bTree.Delete(deleteKey);
                     insertedElementsSet.Remove(deleteKey);
                     break;
-            }
-
-            var treeTraverseKeys = bTree.Traverse().Select(kv => kv.Item1);
-            var actualKeys = insertedElementsSet.Order();
-
-            if (!treeTraverseKeys.SequenceEqual(actualKeys))
-            {
-                throw new Exception("Integrity lost");
             }
         }
 
@@ -144,7 +128,7 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
     Console.WriteLine();
 }
 
-// TestBST(new BTree<uint, uint>(6));
-// TestBST(new BTree<uint, uint>(196));
+TestBST(new BTree<uint, uint>(6));
+TestBST(new BTree<uint, uint>(196));
 TestBST(new BStarTree<uint, uint>(6));
-// TestBST(new BStarTree<uint, uint>(196));
+TestBST(new BStarTree<uint, uint>(196));

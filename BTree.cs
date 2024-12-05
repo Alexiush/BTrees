@@ -5,7 +5,7 @@ using Optional;
 
 namespace HeapsAndBTrees
 {
-    internal class BTree<TKey, TValue> : 
+    public class BTree<TKey, TValue> : 
         DiagnostableBTreeBase<
             TKey, TValue, 
             BTree<TKey, TValue>.IBTreeNode,
@@ -145,7 +145,7 @@ namespace HeapsAndBTrees
             }
         }
 
-        internal class VirtualNode : IBTreeNode, IVirtualNode<Node, IBTreeNode, TKey>
+        public class VirtualNode : IBTreeNode, IVirtualNode<Node, IBTreeNode, TKey>
         {
             public Node Node { get; protected set; }
             public IBTreeNode NodeTyped => Node;
