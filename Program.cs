@@ -1,5 +1,5 @@
 ﻿using HeapsAndBTrees;
-/*
+
 List<(char Key, int Value)> entries = new List<(char, int)>
 {
     ('F', 0),
@@ -24,7 +24,7 @@ List<(char Key, int Value)> entries = new List<(char, int)>
     ('Z', 19),
     ('E', 20),
 };
-var bTree = new BStarTree<char, int>(6);
+var bTree = new BPlusTree<char, int>(6, 6);
 
 
 entries.ForEach(e =>
@@ -49,7 +49,6 @@ removeQueries.ForEach(e =>
     bTree.Delete(e);
     bTree.PrettyPrint();
 });
-*/
 
 void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVirtual, TActual> bTree)
     where TNode : INode<uint>
@@ -128,7 +127,9 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
     Console.WriteLine();
 }
 
-TestBST(new BTree<uint, uint>(6));
-TestBST(new BTree<uint, uint>(196));
-TestBST(new BStarTree<uint, uint>(6));
-TestBST(new BStarTree<uint, uint>(196));
+// TestBST(new BTree<uint, uint>(6));
+// TestBST(new BTree<uint, uint>(196));
+// TestBST(new BStarTree<uint, uint>(6));
+// TestBST(new BStarTree<uint, uint>(196));
+TestBST(new BPlusTree<uint, uint>(6, 6));
+TestBST(new BPlusTree<uint, uint>(204, 2048));
