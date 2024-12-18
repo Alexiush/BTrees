@@ -1,9 +1,4 @@
 ﻿using Optional;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HeapsAndBTrees
 {
@@ -16,7 +11,7 @@ namespace HeapsAndBTrees
         public Option<TValue> Search(TKey key);
         public void Insert(TKey key, TValue value);
         public void Delete(TKey key);
-        public IEnumerable<(TKey, TValue)> Traverse(); 
+        public IEnumerable<(TKey, TValue)> Traverse();
         public void Clear();
 
         public delegate void OnRootChangedEvent(TActual root);

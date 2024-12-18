@@ -24,7 +24,7 @@ List<(char Key, int Value)> entries = new List<(char, int)>
     ('Z', 19),
     ('E', 20),
 };
-var bTree = new BPlusTree<char, int>(6, 6);
+var bTree = new BPlusStarTree<char, int>(6, 6);
 
 
 entries.ForEach(e =>
@@ -50,7 +50,7 @@ removeQueries.ForEach(e =>
     bTree.PrettyPrint();
 });
 
-void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVirtual, TActual> bTree)
+void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVirtual, TActual> bTree, bool debug = false)
     where TNode : INode<uint>
     where TActual : IActualNode<TNode, uint>, TNode
     where TVirtual : IVirtualNode<TActual, TNode, uint>, TNode
@@ -71,6 +71,18 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
         return key;
     }
 
+    void IntegrityCheck()
+    {
+        var expected = insertedElementsSet.Order();
+        var actual = bTree.Traverse().Select(kv => kv.Item1);
+
+        if (!expected.SequenceEqual(actual))
+        {
+            (bTree as BPlusStarTree<uint, uint>).PrettyPrint();
+            throw new Exception("Integrity lost");
+        }
+    }
+
     for (int test = 0; test < 10; test++)
     {
         Console.WriteLine($"Test {test + 1}");
@@ -80,6 +92,11 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
             bTree.Insert(insertKey, (uint)random.Next());
             insertedElementsQueue.Enqueue(insertKey);
             insertedElementsSet.Add(insertKey);
+
+            if (debug)
+            {
+                IntegrityCheck();
+            }
         }
 
         bTree.Watch();
@@ -105,6 +122,11 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
                     insertedElementsSet.Remove(deleteKey);
                     break;
             }
+
+            if (debug)
+            {
+                IntegrityCheck();
+            }
         }
 
         Console.WriteLine("Search:");
@@ -127,9 +149,11 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
     Console.WriteLine();
 }
 
-// TestBST(new BTree<uint, uint>(6));
-// TestBST(new BTree<uint, uint>(196));
-// TestBST(new BStarTree<uint, uint>(6));
-// TestBST(new BStarTree<uint, uint>(196));
+TestBST(new BTree<uint, uint>(6));
+TestBST(new BTree<uint, uint>(196));
+TestBST(new BStarTree<uint, uint>(6));
+TestBST(new BStarTree<uint, uint>(196));
 TestBST(new BPlusTree<uint, uint>(6, 6));
 TestBST(new BPlusTree<uint, uint>(204, 2048));
+TestBST(new BPlusStarTree<uint, uint>(6, 6));
+TestBST(new BPlusStarTree<uint, uint>(204, 2048));

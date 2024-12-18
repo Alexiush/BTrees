@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using Optional;
+﻿using Optional;
 
 namespace HeapsAndBTrees
 {
-    public class BStarTree<TKey, TValue> : 
+    public class BStarTree<TKey, TValue> :
         DiagnostableBTreeBase<
-            TKey, TValue, 
-            BStarTree<TKey, TValue>.IBStarTreeNode, 
-            BStarTree<TKey, TValue>.VirtualNode, 
+            TKey, TValue,
+            BStarTree<TKey, TValue>.IBStarTreeNode,
+            BStarTree<TKey, TValue>.VirtualNode,
             BStarTree<TKey, TValue>.Node
         >
         where TKey : IComparable
@@ -54,7 +49,7 @@ namespace HeapsAndBTrees
 
                 return Children[index];
             }
-            
+
             void IInternalNode<IBStarTreeNode, TKey>.SetChild(int index, IBStarTreeNode child)
             {
                 if (Children is null)
@@ -380,7 +375,7 @@ namespace HeapsAndBTrees
             UpdateRoot(new Node(RootSize));
         }
 
-        private BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) => 
+        private BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) =>
             new BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node>(
                 this,
                 (n, op) => DiskRead(n, op),
@@ -468,26 +463,16 @@ namespace HeapsAndBTrees
                 sibling.RemoveChild(sibling.KeysCount);
             }
 
+            parent.InsertFull(childIndex + 1, sibling.GetKey(sibling.KeysCount - 1), node, sibling.GetValue(sibling.KeysCount - 1), false);
+            sibling.RemoveValue(sibling.KeysCount - 1);
+
             for (int index = sibling.KeysCount - 1; index > median; index--)
             {
-                TKey key = sibling.GetKey(index);
-                TValue value = sibling.GetValue(index);
-                sibling.RemoveValue(index);
-
-                node.InsertValue(0, key, value);
-                if (!sibling.IsLeaf())
-                {
-                    IBStarTreeNode grandchild = sibling.GetChild(index);
-                    node.InsertChild(0, grandchild);
-                    sibling.RemoveChild(index);
-                }
+                RightTransfer(sibling, node, parent, childIndex + 1);
             }
 
-            parent.InsertFull(childIndex + 1, sibling.GetKey(median), node, sibling.GetValue(median), false);
-            sibling.RemoveValue(median);
-
             median = (2 * _size / 3) - 1;
-            while(child.KeysCount > median)
+            while (child.KeysCount > median)
             {
                 RightTransfer(child, sibling, parent, childIndex);
             }
@@ -575,29 +560,7 @@ namespace HeapsAndBTrees
             int neighborKeys = keysToDistribute - childKeys;
 
             int comparisonIndex = leftToRight ? donor.KeysCount - 1 : 0;
-            bool directedComparison(TKey secondKey) => leftToRight == key.CompareTo(secondKey) > 0;
-
-            bool possibleCircularDependency = (neighborKeys == _size - 1) && directedComparison(donor.GetKey(comparisonIndex));
-
-            if (!IsFull(donee) && possibleCircularDependency)
-            {
-                IBStarTreeNode leaf = donor;
-                while (!leaf.IsLeaf())
-                {
-                    leaf = leaf.GetChild(leftToRight ? leaf.KeysCount : 0);
-                }
-                TKey substitute = leaf.GetKey(leftToRight ? leaf.KeysCount - 1 : 0);
-
-                if (directedComparison(substitute))
-                {
-                    int fixIndex = leftToRight ? index : index - 1;
-
-                    Insert(parent.GetKey(fixIndex), parent.GetValue(index), donee);
-                    parent.SetKey(fixIndex, key);
-                    parent.SetValue(fixIndex, value);
-                    return true;
-                }
-            }
+            bool possibleCircularDependency = (neighborKeys == _size - 1) && leftToRight == key.CompareTo(donor.GetKey(comparisonIndex)) > 0;
 
             if (!leftToRight)
             {
@@ -663,8 +626,8 @@ namespace HeapsAndBTrees
             {
                 TwoThreeSplit(pointer, child, neighbor, index);
             }
-            IndexFixup(key, pointer, ref index);
 
+            IndexFixup(key, pointer, ref index);
             Insert(key, value, pointer.GetChild(index));
             return;
         }
@@ -676,15 +639,13 @@ namespace HeapsAndBTrees
                 return;
             }
 
-            IBStarTreeNode node = new Node(_size);
+            IBStarTreeNode node = new Node(RootSize);
 
             var temp = root;
             UpdateRoot(node);
             node.SetChild(0, temp);
 
             Split(node, temp, 0);
-
-            node.Expand(RootSize);
             temp.Shrink(_size);
         }
 
@@ -734,14 +695,11 @@ namespace HeapsAndBTrees
                 donee.InsertChild(donee.KeysCount, donor.GetChild(0));
                 donor.RemoveChild(0);
             }
+            parent.RemoveFull(mutualKey, leftToRight);
 
-            if (parent.KeysCount == 1)
+            if (parent.KeysCount == 0)
             {
                 UpdateRoot(donee);
-            }
-            else
-            {
-                parent.RemoveFull(mutualKey, leftToRight);
             }
         }
 
@@ -754,17 +712,27 @@ namespace HeapsAndBTrees
             int left = totalNodes / 2;
             int right = totalNodes - left;
 
-            while(leftNeighbor.KeysCount != left)
+            while (leftNeighbor.KeysCount != left && child.KeysCount > 0)
             {
                 LeftTransfer(child, leftNeighbor, parent, leftMutualKey);
             }
 
-            while(rightNeighbor.KeysCount > 0)
+            while (rightNeighbor.KeysCount > 0)
             {
                 LeftTransfer(rightNeighbor, child, parent, rightMutualKey);
             }
 
+            while (leftNeighbor.KeysCount != left)
+            {
+                LeftTransfer(child, leftNeighbor, parent, leftMutualKey);
+            }
+
             child.InsertValue(child.KeysCount, parent.GetKey(rightMutualKey), parent.GetValue(rightMutualKey));
+            if (!rightNeighbor.IsLeaf())
+            {
+                child.InsertChild(child.KeysCount, rightNeighbor.GetChild(0));
+                rightNeighbor.RemoveChild(0);
+            }
             parent.RemoveFull(rightMutualKey, true);
         }
 
@@ -773,7 +741,7 @@ namespace HeapsAndBTrees
             (IBStarTreeNode child, IBStarTreeNode firstNeighbor, IBStarTreeNode secondNeighbor) = index switch
             {
                 0 => (parent.GetChild(index), parent.GetChild(index + 1), parent.GetChild(index + 2)),
-                int x when x == parent.KeysCount => (parent.GetChild(index), parent.GetChild(index - 1), parent.GetChild(index - 2)), 
+                int x when x == parent.KeysCount => (parent.GetChild(index), parent.GetChild(index - 1), parent.GetChild(index - 2)),
                 _ => (parent.GetChild(index), parent.GetChild(index - 1), parent.GetChild(index + 1))
             };
 
@@ -799,7 +767,7 @@ namespace HeapsAndBTrees
                     {
                         Distribute(neighbor, childNode, pointer, index == 0 ? index : index - 1, index != 0);
                     }
-                    
+
                     return;
                 }
 
@@ -897,7 +865,6 @@ namespace HeapsAndBTrees
                     childNode.Expand(RootSize);
                     var childNodeSuccessor = pointer.GetChild(index + 1);
                     Merge(childNodeSuccessor, childNode, pointer, index, true);
-                    pointer.Shrink(_size);
                     Delete(key, childNode);
                 }
                 else
@@ -935,7 +902,6 @@ namespace HeapsAndBTrees
 
                 childNode.Expand(RootSize);
                 Merge(childNodeNeighbor, childNode, pointer, parentKeyIndex, index != 0);
-                pointer.Shrink(_size);
                 Delete(key, childNode);
             }
             else

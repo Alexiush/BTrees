@@ -1,10 +1,4 @@
 ﻿using Optional;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HeapsAndBTrees
 {
@@ -23,7 +17,7 @@ namespace HeapsAndBTrees
             public void Print(int offset = 0);
         }
 
-        public interface IBPlusTreeInternalNode : IBPlusTreeNode, IInternalNode<IBPlusTreeNode, TKey> 
+        public interface IBPlusTreeInternalNode : IBPlusTreeNode, IInternalNode<IBPlusTreeNode, TKey>
         {
             public void InsertKey(int index, TKey key);
             public void RemoveKey(int index);
@@ -171,7 +165,7 @@ namespace HeapsAndBTrees
             }
         }
 
-        public class LeafNode: Node, IBPlusTreeValueNode
+        public class LeafNode : Node, IBPlusTreeValueNode
         {
             protected TValue[] _values;
             public ref TValue[] Values { get { return ref _values; } }
@@ -279,13 +273,13 @@ namespace HeapsAndBTrees
                 IsDirty = true;
             }
 
-            public ref IBPlusTreeNode[] Children 
-            { 
-                get 
+            public ref IBPlusTreeNode[] Children
+            {
+                get
                 {
                     _context.Actualize(this);
                     return ref NodeTyped.Children;
-                } 
+                }
             }
 
             public IBPlusTreeNode GetChild(int index)
@@ -516,7 +510,7 @@ namespace HeapsAndBTrees
             parent.SetKey(mutualKey, leftToRight ? donor.GetKey(transferIndex - 1) : transferKey);
         }
 
-        private void Transfer<T>(T donor, T donee, IBPlusTreeInternalNode parent, int mutualKey, bool leftToRight) where T: IBPlusTreeNode
+        private void Transfer<T>(T donor, T donee, IBPlusTreeInternalNode parent, int mutualKey, bool leftToRight) where T : IBPlusTreeNode
         {
             switch ((donor, donee))
             {
@@ -534,8 +528,8 @@ namespace HeapsAndBTrees
 
         private void Split(IBPlusTreeInternalNode parent, IBPlusTreeInternalNode child, int childIndex)
         {
-            int size = _nodeSize;
-            var node = new InternalNode(size);
+            var node = new InternalNode(_nodeSize);
+            int size = child.KeysCount + 1;
             int median = (size / 2) - 1;
 
             node.InsertChild(0, child.GetChild(size - 1));
@@ -551,11 +545,12 @@ namespace HeapsAndBTrees
 
         private void Split(IBPlusTreeInternalNode parent, IBPlusTreeValueNode child, int childIndex)
         {
-            int size = _leafSize;
-            var node = new LeafNode(size);
+            var node = new LeafNode(_leafSize);
+            int size = child.KeysCount;
             int median = (size / 2) - 1;
 
             parent.InsertKey(childIndex, child.GetKey(size - 1));
+
             parent.InsertChild(childIndex + 1, node);
             for (int index = size - 2; index >= median; index--)
             {
@@ -656,14 +651,11 @@ namespace HeapsAndBTrees
                 doneeTyped.InsertChild(donee.KeysCount + 1, donorTyped.GetChild(0));
                 doneeTyped.InsertKey(donee.KeysCount, parent.GetKey(mutualKey));
             }
+            parent.RemoveFull(mutualKey, leftToRight);
 
-            if (IsRoot(parent) && parent.KeysCount == 1)
+            if (IsRoot(parent) && parent.KeysCount == 0)
             {
                 UpdateRoot(donee);
-            }
-            else
-            {
-                parent.RemoveFull(mutualKey, leftToRight);
             }
         }
 
@@ -784,7 +776,7 @@ namespace HeapsAndBTrees
         }
 
         private IEnumerable<(TKey, TValue)> Traverse(InternalNode pointer)
-        { 
+        {
             IEnumerable<(TKey, TValue)> accumulator = new List<(TKey, TValue)>();
 
             for (int i = 0; i <= pointer.KeysCount; ++i)

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HeapsAndBTrees
+﻿namespace HeapsAndBTrees
 {
-    public interface INode<TKey> 
+    public interface INode<TKey>
         where TKey : IComparable
     {
         public int KeysCount { get; protected set; }
@@ -51,7 +45,7 @@ namespace HeapsAndBTrees
         }
     }
 
-    public interface IInternalNode<T, TKey> : INode<TKey> 
+    public interface IInternalNode<T, TKey> : INode<TKey>
         where T : INode<TKey>
         where TKey : IComparable
     {

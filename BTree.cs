@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Optional;
+﻿using Optional;
 
 namespace HeapsAndBTrees
 {
-    public class BTree<TKey, TValue> : 
+    public class BTree<TKey, TValue> :
         DiagnostableBTreeBase<
-            TKey, TValue, 
+            TKey, TValue,
             BTree<TKey, TValue>.IBTreeNode,
             BTree<TKey, TValue>.VirtualNode,
             BTree<TKey, TValue>.Node
-        > 
+        >
         where TKey : IComparable
     {
         public interface IBTreeNode : INode<TKey>, IValueNode<TKey, TValue>, IInternalNode<IBTreeNode, TKey>
@@ -90,7 +87,7 @@ namespace HeapsAndBTrees
             public void InsertFull(int index, TKey key, IBTreeNode child, TValue value, bool leftToRight)
             {
                 SelfTyped.InsertValue(index, key, value);
-                InsertChild(leftToRight ? index: index + 1, child);
+                InsertChild(leftToRight ? index : index + 1, child);
             }
 
             public void RemoveFull(int index, bool leftToRight)
@@ -165,13 +162,13 @@ namespace HeapsAndBTrees
                 }
             }
 
-            public ref TKey[] Keys 
-            { 
-                get 
+            public ref TKey[] Keys
+            {
+                get
                 {
                     _context.Actualize(this);
                     return ref Node.Keys;
-                } 
+                }
             }
 
             public ref TValue[] Values
@@ -228,7 +225,7 @@ namespace HeapsAndBTrees
                 if (child is null)
                 {
                     new ArgumentException("Requested child was null");
-                }    
+                }
 
                 var virtualChild = new VirtualNode(child, _context);
                 return virtualChild;
@@ -313,14 +310,14 @@ namespace HeapsAndBTrees
 
         private int _size;
         private Node _root;
-        
+
         public BTree(int size)
         {
             _size = size;
             UpdateRoot(new Node(_size));
         }
 
-        private BTreeContext<TKey, TValue, IBTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) => 
+        private BTreeContext<TKey, TValue, IBTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) =>
             new BTreeContext<TKey, TValue, IBTreeNode, VirtualNode, Node>(
                 this,
                 (n, op) => DiskRead(n, op),
@@ -383,14 +380,14 @@ namespace HeapsAndBTrees
 
             if (!child.IsLeaf())
             {
-                node.InsertChild(0, child.GetChild(_size-1));
-                child.RemoveChild(_size-1);
+                node.InsertChild(0, child.GetChild(_size - 1));
+                child.RemoveChild(_size - 1);
             }
 
             parent.InsertFull(childIndex, child.GetKey(_size - 2), node, child.GetValue(_size - 2), false);
             child.RemoveValue(_size - 2);
 
-            for (int index = _size-3; index >= median; index--)
+            for (int index = _size - 3; index >= median; index--)
             {
                 RightTransfer(child, node, parent, childIndex);
             }
@@ -406,10 +403,10 @@ namespace HeapsAndBTrees
                 int middle = (start + end) / 2;
 
                 int comparisonResult = key.CompareTo(pointer.GetKey(middle));
-                
+
                 switch (comparisonResult)
                 {
-                    case 0: 
+                    case 0:
                         return middle;
                     case < 0:
                         end = middle;
@@ -547,14 +544,11 @@ namespace HeapsAndBTrees
                 donee.InsertChild(donee.KeysCount, donor.GetChild(0));
                 donor.RemoveChild(0);
             }
+            parent.RemoveFull(mutualKey, leftToRight);
 
-            if (IsRoot(parent) && parent.KeysCount == 1)
+            if (IsRoot(parent) && parent.KeysCount == 0)
             {
                 UpdateRoot(donee);
-            }
-            else
-            {
-                parent.RemoveFull(mutualKey, leftToRight);
             }
         }
 

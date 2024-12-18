@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HeapsAndBTrees
+﻿namespace HeapsAndBTrees
 {
-    public interface IVirtualNode<T, TT, TKey> 
+    public interface IVirtualNode<T, TT, TKey>
         where T : IActualNode<TT, TKey>
         where TT : INode<TKey>
         where TKey : IComparable
@@ -18,12 +12,12 @@ namespace HeapsAndBTrees
     public interface IActualNode<T, TKey>
         where T : INode<TKey>
         where TKey : IComparable
-    { 
-    
+    {
+
     }
 
-    public class BTreeContext<TKey, TValue, TNode, TVirtual, TActual> : IDisposable 
-        where TKey: IComparable
+    public class BTreeContext<TKey, TValue, TNode, TVirtual, TActual> : IDisposable
+        where TKey : IComparable
         where TNode : INode<TKey>
         where TActual : IActualNode<TNode, TKey>, TNode
         where TVirtual : IVirtualNode<TActual, TNode, TKey>, TNode
