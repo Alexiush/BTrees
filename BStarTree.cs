@@ -367,12 +367,15 @@ namespace HeapsAndBTrees
         private int _size;
         private int RootSize => (2 * ((2 * _size - 2) / 3)) + 1;
 
+        private int _contextSize;
+
         private Node _root;
 
-        public BStarTree(int size)
+        public BStarTree(int size, int contextSize = 4)
         {
             _size = size;
             UpdateRoot(new Node(RootSize));
+            _contextSize = contextSize;
         }
 
         private BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) =>
@@ -381,7 +384,7 @@ namespace HeapsAndBTrees
                 (n, op) => DiskRead(n, op),
                 (n, op) => DiskWrite(n, op),
                 (n, context) => new VirtualNode(n, context),
-                _root, caller, 4
+                _root, caller, _contextSize
             );
 
         public void UpdateRoot(IBStarTreeNode newRoot)
@@ -951,21 +954,26 @@ namespace HeapsAndBTrees
             }
         }
 
-        private IEnumerable<(TKey, TValue)> Traverse(Node pointer)
+        private IEnumerable<(TKey, TValue)> Traverse(IBStarTreeNode pointer)
         {
-            if (pointer.IsLeaf())
-            {
-                return pointer.Keys.Zip(pointer.Values).Take(pointer.KeysCount);
-            }
-
             IEnumerable<(TKey, TValue)> accumulator = new List<(TKey, TValue)>();
 
-            for (int i = 0; i < pointer.KeysCount; ++i)
+            if (pointer.IsLeaf())
             {
-                accumulator = accumulator.Concat(Traverse(pointer.Children[i] as Node));
-                accumulator = accumulator.Append((pointer.Keys[i], pointer.Values[i]));
+                for (int i = 0; i < pointer.KeysCount; ++i)
+                {
+                    accumulator = accumulator.Append((pointer.GetKey(i), pointer.GetValue(i)));
+                }
             }
-            accumulator = accumulator.Concat(Traverse(pointer.Children[pointer.KeysCount] as Node));
+            else
+            {
+                for (int i = 0; i < pointer.KeysCount; ++i)
+                {
+                    accumulator = accumulator.Concat(Traverse(pointer.GetChild(i)));
+                    accumulator = accumulator.Append((pointer.GetKey(i), pointer.GetValue(i)));
+                }
+                accumulator = accumulator.Concat(Traverse(pointer.GetChild(pointer.KeysCount)));
+            }
 
             return accumulator;
         }

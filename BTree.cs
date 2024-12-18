@@ -309,11 +309,13 @@ namespace HeapsAndBTrees
         }
 
         private int _size;
+        private int _contextSize;
         private Node _root;
 
-        public BTree(int size)
+        public BTree(int size, int contextSize = 3)
         {
             _size = size;
+            _contextSize = contextSize;
             UpdateRoot(new Node(_size));
         }
 
@@ -323,7 +325,7 @@ namespace HeapsAndBTrees
                 (n, op) => DiskRead(n, op),
                 (n, op) => DiskWrite(n, op),
                 (n, context) => new VirtualNode(n, context),
-                _root, caller, 3
+                _root, caller, _contextSize
             );
 
         public void UpdateRoot(IBTreeNode newRoot)
@@ -673,28 +675,34 @@ namespace HeapsAndBTrees
             }
         }
 
-        private IEnumerable<(TKey, TValue)> Traverse(Node pointer)
+        private IEnumerable<(TKey, TValue)> Traverse(IBTreeNode pointer)
         {
-            if (pointer.IsLeaf())
-            {
-                return pointer.Keys.Zip(pointer.Values).Take(pointer.KeysCount);
-            }
-
             IEnumerable<(TKey, TValue)> accumulator = new List<(TKey, TValue)>();
 
-            for (int i = 0; i < pointer.KeysCount; ++i)
+            if (pointer.IsLeaf())
             {
-                accumulator = accumulator.Concat(Traverse(pointer.Children[i] as Node));
-                accumulator = accumulator.Append((pointer.Keys[i], pointer.Values[i]));
+                for (int i = 0; i < pointer.KeysCount; ++i)
+                {
+                    accumulator = accumulator.Append((pointer.GetKey(i), pointer.GetValue(i)));
+                }
             }
-            accumulator = accumulator.Concat(Traverse(pointer.Children[pointer.KeysCount] as Node));
+            else
+            {
+                for (int i = 0; i < pointer.KeysCount; ++i)
+                {
+                    accumulator = accumulator.Concat(Traverse(pointer.GetChild(i)));
+                    accumulator = accumulator.Append((pointer.GetKey(i), pointer.GetValue(i)));
+                }
+                accumulator = accumulator.Concat(Traverse(pointer.GetChild(pointer.KeysCount)));
+            }
 
             return accumulator;
         }
 
         public override IEnumerable<(TKey, TValue)> Traverse()
         {
-            return Traverse(_root);
+            using BTreeContext<TKey, TValue, IBTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Delete);
+            return Traverse(context.Root);
         }
 
         public void PrettyPrint()

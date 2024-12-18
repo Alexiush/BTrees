@@ -1,4 +1,5 @@
 ﻿using Optional;
+using System.Linq;
 
 namespace HeapsAndBTrees
 {
@@ -370,12 +371,14 @@ namespace HeapsAndBTrees
 
         private int _nodeSize;
         private int _leafSize;
+        private int _contextSize;
         private Node _root;
 
-        public BPlusTree(int nodeSize, int leafSize)
+        public BPlusTree(int nodeSize, int leafSize, int contextSize = 3)
         {
             _nodeSize = nodeSize;
             _leafSize = leafSize;
+            _contextSize = contextSize;
             UpdateRoot(new LeafNode(_leafSize));
         }
 
@@ -389,7 +392,7 @@ namespace HeapsAndBTrees
                     InternalNode internalNode => new VirtualInternalNode(internalNode, context),
                     LeafNode leafNode => new VirtualLeafNode(leafNode, context),
                 },
-                _root, caller, 3
+                _root, caller, _contextSize
             );
 
         public void UpdateRoot(IBPlusTreeNode newRoot)
@@ -770,24 +773,31 @@ namespace HeapsAndBTrees
             return Option.None<TValue>();
         }
 
-        private IEnumerable<(TKey, TValue)> Traverse(LeafNode pointer)
-        {
-            return pointer.Keys.Zip(pointer.Values).Take(pointer.KeysCount);
-        }
-
-        private IEnumerable<(TKey, TValue)> Traverse(InternalNode pointer)
+        private IEnumerable<(TKey, TValue)> Traverse(IBPlusTreeValueNode pointer)
         {
             IEnumerable<(TKey, TValue)> accumulator = new List<(TKey, TValue)>();
 
             for (int i = 0; i <= pointer.KeysCount; ++i)
             {
-                accumulator = accumulator.Concat(Traverse(pointer.Children[i] as Node));
+                accumulator = accumulator.Append((pointer.GetKey(i), pointer.GetValue(i)));
             }
 
             return accumulator;
         }
 
-        private IEnumerable<(TKey, TValue)> Traverse(Node pointer) => pointer switch
+        private IEnumerable<(TKey, TValue)> Traverse(IBPlusTreeInternalNode pointer)
+        {
+            IEnumerable<(TKey, TValue)> accumulator = new List<(TKey, TValue)>();
+
+            for (int i = 0; i <= pointer.KeysCount; ++i)
+            {
+                accumulator = accumulator.Concat(Traverse(pointer.GetChild(i)));
+            }
+
+            return accumulator;
+        }
+
+        private IEnumerable<(TKey, TValue)> Traverse(IBPlusTreeNode pointer) => pointer switch
         {
             LeafNode leafNode => Traverse(leafNode),
             InternalNode internalNode => Traverse(internalNode),
