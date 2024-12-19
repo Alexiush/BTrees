@@ -27,6 +27,7 @@ namespace HeapsAndBTrees
         public BTreeDiagnosticsData Retrieve(BTreeOperation operation);
         public void Watch();
         public void ResetWatch();
+        public void PrettyPrint();
     }
 
     public enum BTreeOperation
@@ -82,6 +83,26 @@ namespace HeapsAndBTrees
             };
         }
 
+        protected virtual void DiskWrite(TNode node, BTreeOperation caller)
+        {
+            if (!_watched)
+            {
+                return;
+            }
+
+            _diagnosticsData[caller].Writes++;
+        }
+
+        protected virtual void DiskRead(TNode node, BTreeOperation caller)
+        {
+            if (!_watched)
+            {
+                return;
+            }
+
+            _diagnosticsData[caller].Reads++;
+        }
+
         public BTreeDiagnosticsData Retrieve(BTreeOperation operation)
         {
             return _diagnosticsData.GetValueOrDefault(operation, new BTreeDiagnosticsData());
@@ -95,5 +116,7 @@ namespace HeapsAndBTrees
 
         public event IBTree<TKey, TValue, TNode, TVirtual, TActual>.OnRootChangedEvent OnRootChanged;
         protected void InvokeOnRootChanged(TActual node) => OnRootChanged?.Invoke(node);
+
+        public abstract void PrettyPrint();
     }
 }

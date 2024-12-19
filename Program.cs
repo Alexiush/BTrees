@@ -1,54 +1,58 @@
 ﻿using HeapsAndBTrees;
 
-List<(char Key, int Value)> entries = new List<(char, int)>
+void UsageExample<TNode, TVirtual, TActual>(IDiagnostableBTree<char, int, TNode, TVirtual, TActual> bTree)
+    where TNode : INode<char>
+    where TActual : IActualNode<TNode, char>, TNode
+    where TVirtual : IVirtualNode<TActual, TNode, char>, TNode
 {
-    ('F', 0),
-    ('S', 1),
-    ('Q', 2),
-    ('K', 3),
-    ('C', 4),
-    ('L', 5),
-    ('H', 6),
-    ('T', 7),
-    ('V', 8),
-    ('W', 9),
-    ('M', 10),
-    ('R', 11),
-    ('N', 12),
-    ('P', 13),
-    ('A', 14),
-    ('B', 15),
-    ('X', 16),
-    ('Y', 17),
-    ('D', 18),
-    ('Z', 19),
-    ('E', 20),
-};
-var bTree = new BPlusStarTree<char, int>(6, 6);
+    List<(char Key, int Value)> entries = new List<(char, int)>
+    {
+        ('F', 0),
+        ('S', 1),
+        ('Q', 2),
+        ('K', 3),
+        ('C', 4),
+        ('L', 5),
+        ('H', 6),
+        ('T', 7),
+        ('V', 8),
+        ('W', 9),
+        ('M', 10),
+        ('R', 11),
+        ('N', 12),
+        ('P', 13),
+        ('A', 14),
+        ('B', 15),
+        ('X', 16),
+        ('Y', 17),
+        ('D', 18),
+        ('Z', 19),
+        ('E', 20),
+    };
 
+    entries.ForEach(e =>
+    {
+        bTree.Insert(e.Key, e.Value);
+        bTree.PrettyPrint();
+    });
+    entries.ForEach(e => bTree.Search(e.Key).Match(
+        n => { Console.WriteLine($"There is value {n} that corresponds to key {e.Key}"); },
+        () => { Console.WriteLine($"There is no key {e.Key} in the tree"); }
+    ));
 
-entries.ForEach(e =>
-{
-    bTree.Insert(e.Key, e.Value);
     bTree.PrettyPrint();
-});
-entries.ForEach(e => bTree.Search(e.Key).Match(
-    n => { Console.WriteLine($"There is value {n} that corresponds to key {e.Key}"); },
-    () => { Console.WriteLine($"There is no key {e.Key} in the tree"); }
-));
+    Console.WriteLine();
 
-bTree.PrettyPrint();
-Console.WriteLine();
-
-List<char> removeQueries = new List<char>
+    List<char> removeQueries = new List<char>
 {
     'B', 'S', 'A', 'C', 'Y', 'R', 'N', 'H', 'K', 'L', 'V', 'Z', 'X', 'T', 'M', 'E', 'P', 'Q', 'W', 'D',
 };
-removeQueries.ForEach(e =>
-{
-    bTree.Delete(e);
-    bTree.PrettyPrint();
-});
+    removeQueries.ForEach(e =>
+    {
+        bTree.Delete(e);
+        bTree.PrettyPrint();
+    });
+}
 
 void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVirtual, TActual> bTree, bool debug = false)
     where TNode : INode<uint>
@@ -78,7 +82,7 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
 
         if (!expected.SequenceEqual(actual))
         {
-            (bTree as BPlusStarTree<uint, uint>).PrettyPrint();
+            bTree.PrettyPrint();
             throw new Exception("Integrity lost");
         }
     }
@@ -148,6 +152,8 @@ void TestBST<TNode, TVirtual, TActual>(IDiagnostableBTree<uint, uint, TNode, TVi
     }
     Console.WriteLine();
 }
+
+UsageExample(new BPlusStarTree<char, int>(6, 6));
 
 TestBST(new BTree<uint, uint>(6));
 TestBST(new BTree<uint, uint>(196));

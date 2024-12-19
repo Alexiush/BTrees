@@ -159,7 +159,7 @@ namespace HeapsAndBTrees
 
                 for (int i = 0; i < KeysCount; i++)
                 {
-                    Console.Write(Keys[i]);
+                    Console.Write($"{Keys[i]}: {Values[i]}");
                     Console.Write(" ");
                 }
                 Console.Write("_");
@@ -172,11 +172,6 @@ namespace HeapsAndBTrees
 
                 for (int i = 0; i <= KeysCount; i++)
                 {
-                    if (Children[i] is null)
-                    {
-                        Console.WriteLine("Something fishy");
-                    }
-
                     Children[i].Print(offset + 1);
                 }
             }
@@ -379,7 +374,7 @@ namespace HeapsAndBTrees
         }
 
         private BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) =>
-            new BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node>(
+            new (
                 this,
                 (n, op) => DiskRead(n, op),
                 (n, op) => DiskWrite(n, op),
@@ -403,26 +398,6 @@ namespace HeapsAndBTrees
         public override void Clear()
         {
             _root = new Node(RootSize);
-        }
-
-        public void DiskWrite(IBStarTreeNode node, BTreeOperation caller)
-        {
-            if (!_watched)
-            {
-                return;
-            }
-
-            _diagnosticsData[caller].Writes++;
-        }
-
-        public void DiskRead(IBStarTreeNode node, BTreeOperation caller)
-        {
-            if (!_watched)
-            {
-                return;
-            }
-
-            _diagnosticsData[caller].Reads++;
         }
 
         private bool IsFull(IBStarTreeNode node) => (IsRoot(node) && node.KeysCount == (RootSize - 1)) || node.KeysCount == (_size - 1);
@@ -654,7 +629,7 @@ namespace HeapsAndBTrees
 
         public override void Insert(TKey key, TValue value)
         {
-            using BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Insert);
+            using var context = CreateContext(BTreeOperation.Insert);
 
             if (_watched)
             {
@@ -916,7 +891,7 @@ namespace HeapsAndBTrees
 
         public override void Delete(TKey key)
         {
-            using BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Delete);
+            using var context = CreateContext(BTreeOperation.Delete);
 
             if (_watched)
             {
@@ -928,7 +903,7 @@ namespace HeapsAndBTrees
 
         public override Option<TValue> Search(TKey key)
         {
-            using BTreeContext<TKey, TValue, IBStarTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Search);
+            using var context = CreateContext(BTreeOperation.Search);
 
             if (_watched)
             {
@@ -983,7 +958,7 @@ namespace HeapsAndBTrees
             return Traverse(_root);
         }
 
-        public void PrettyPrint()
+        public override void PrettyPrint()
         {
             _root.Print();
             Console.WriteLine();

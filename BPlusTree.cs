@@ -1,5 +1,4 @@
 ﻿using Optional;
-using System.Linq;
 
 namespace HeapsAndBTrees
 {
@@ -156,11 +155,6 @@ namespace HeapsAndBTrees
 
                 for (int i = 0; i <= KeysCount; i++)
                 {
-                    if (Children[i] is null)
-                    {
-                        Console.WriteLine("Something fishy");
-                    }
-
                     Children[i].Print(offset + 1);
                 }
             }
@@ -192,7 +186,7 @@ namespace HeapsAndBTrees
 
                 for (int i = 0; i < KeysCount; i++)
                 {
-                    Console.Write(Keys[i]);
+                    Console.Write($"{Keys[i]}: {Values[i]}");
                     Console.Write(" ");
                 }
                 Console.WriteLine();
@@ -383,7 +377,7 @@ namespace HeapsAndBTrees
         }
 
         private BTreeContext<TKey, TValue, IBPlusTreeNode, VirtualNode, Node> CreateContext(BTreeOperation caller) =>
-            new BTreeContext<TKey, TValue, IBPlusTreeNode, VirtualNode, Node>(
+            new(
                 this,
                 (n, op) => DiskRead(n, op),
                 (n, op) => DiskWrite(n, op),
@@ -391,6 +385,7 @@ namespace HeapsAndBTrees
                 {
                     InternalNode internalNode => new VirtualInternalNode(internalNode, context),
                     LeafNode leafNode => new VirtualLeafNode(leafNode, context),
+                    _ => throw new NotSupportedException()
                 },
                 _root, caller, _contextSize
             );
@@ -413,36 +408,18 @@ namespace HeapsAndBTrees
             UpdateRoot(new LeafNode(_leafSize));
         }
 
-        public void DiskWrite(IBPlusTreeNode node, BTreeOperation caller)
-        {
-            if (!_watched)
-            {
-                return;
-            }
-
-            _diagnosticsData[caller].Writes++;
-        }
-
-        public void DiskRead(IBPlusTreeNode node, BTreeOperation caller)
-        {
-            if (!_watched)
-            {
-                return;
-            }
-
-            _diagnosticsData[caller].Reads++;
-        }
-
         private bool IsFull(IBPlusTreeNode node) => node switch
         {
             IBPlusTreeValueNode leafNode => leafNode.KeysCount == _leafSize,
             IBPlusTreeInternalNode internalNode => internalNode.KeysCount == (_nodeSize - 1),
+            _ => throw new NotSupportedException()
         };
 
         private bool IsBig(IBPlusTreeNode node) => node switch
         {
             IBPlusTreeValueNode leafNode => leafNode.KeysCount > ((_leafSize / 2) - 1),
             IBPlusTreeInternalNode internalNode => internalNode.KeysCount > ((_nodeSize / 2) - 1),
+            _ => throw new NotSupportedException()
         };
 
         private bool IsRoot(IBPlusTreeNode node) => node switch
@@ -630,7 +607,7 @@ namespace HeapsAndBTrees
 
         public override void Insert(TKey key, TValue value)
         {
-            using BTreeContext<TKey, TValue, IBPlusTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Insert);
+            using var context = CreateContext(BTreeOperation.Insert);
 
             if (_watched)
             {
@@ -738,7 +715,7 @@ namespace HeapsAndBTrees
 
         public override void Delete(TKey key)
         {
-            using BTreeContext<TKey, TValue, IBPlusTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Delete);
+            using var context = CreateContext(BTreeOperation.Delete);
 
             if (_watched)
             {
@@ -750,7 +727,7 @@ namespace HeapsAndBTrees
 
         public override Option<TValue> Search(TKey key)
         {
-            using BTreeContext<TKey, TValue, IBPlusTreeNode, VirtualNode, Node> context = CreateContext(BTreeOperation.Search);
+            using var context = CreateContext(BTreeOperation.Search);
 
             if (_watched)
             {
@@ -801,6 +778,7 @@ namespace HeapsAndBTrees
         {
             LeafNode leafNode => Traverse(leafNode),
             InternalNode internalNode => Traverse(internalNode),
+            _ => throw new NotSupportedException()
         };
 
         public override IEnumerable<(TKey, TValue)> Traverse()
@@ -808,7 +786,7 @@ namespace HeapsAndBTrees
             return Traverse(_root);
         }
 
-        public void PrettyPrint()
+        public override void PrettyPrint()
         {
             _root.Print();
             Console.WriteLine();
